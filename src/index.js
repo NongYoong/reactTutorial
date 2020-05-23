@@ -24,26 +24,23 @@ class Board extends React.Component {
   }
 	
   render() {
-    return (
-      <div>
-        <div className="board-row">
-          {this.renderSquare(0)}
-          {this.renderSquare(1)}
-          {this.renderSquare(2)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(3)}
-          {this.renderSquare(4)}
-          {this.renderSquare(5)}
-        </div>
-        <div className="board-row">
-          {this.renderSquare(6)}
-          {this.renderSquare(7)}
-          {this.renderSquare(8)}
-        </div>
-      </div>
-    );
-  }
+        const borderRow = [];
+        let k = 0;
+        for (let i = 0; i < 3; i++) {
+            const squares = [];
+            for (let j = 0; j < 3; j++) {
+                squares.push(this.renderSquare(3 * i + j));
+                k++
+            }
+            borderRow.push(<div key={k} className="board-row">{squares}</div>)
+        }
+ 
+        return (
+            <div>
+                {borderRow}
+            </div>
+        );
+    }
 }
 
 class Game extends React.Component {
@@ -52,6 +49,8 @@ class Game extends React.Component {
     this.state = {
       history: [{
         squares: Array(9).fill(null),
+		row: null,
+        col: null,
       }],
       isXNext: true,
 	  stepNumber: 0,
@@ -69,6 +68,8 @@ class Game extends React.Component {
     this.setState({
       history: history.concat([{
         squares: squares,
+		row: Math.floor(i / 3 + 1),
+        col: i % 3 + 1,
       }]),
       stepNumber: history.length,
       isXNext: !this.state.isXNext,
@@ -86,14 +87,17 @@ class Game extends React.Component {
 	const history = this.state.history;
     const current = history[this.state.stepNumber];
     const winner = calculateWinner(current.squares);
+	let howtowin = howto(current.squares);
 	  
 	const moves = history.map((step, move) => {
       const desc = move ?
-        'Go to move #' + move :
+        'Go to move #' + move + " that is " + step.row + ", " + step.col:
         'Go to game start';
       return (
         <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          <button onClick={() => this.jumpTo(move)}
+			  className = {move === this.state.stepNumber? 'font-bolding' : ''}
+			  >{desc}</button>
         </li>
       );
     });
@@ -128,6 +132,26 @@ ReactDOM.render(
   <Game />,
   document.getElementById('root')
 );
+
+function howto(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return [squares[a], lines[i]];
+    }
+  }
+  return null;
+}
 
 function calculateWinner(squares) {
   const lines = [
